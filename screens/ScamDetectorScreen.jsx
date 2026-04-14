@@ -255,7 +255,7 @@ function CheckMessageView() {
                 <Text style={checkStyles.checkBtnText}>  Analyzing...</Text>
               </>
             ) : (
-              <Text style={checkStyles.checkBtnText}>Check This Message 🔍</Text>
+              <Text style={checkStyles.checkBtnText}>Check Message 🔍</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -562,10 +562,8 @@ const learnStyles = StyleSheet.create({
 });
 
 // ─── ScamDetectorScreen ───────────────────────────────────────────────────────
-export default function ScamDetectorScreen({ navigation }) {
+export default function ScamDetectorScreen() {
   const [activeTab, setActiveTab] = useState('check');
-
-  const handleLearnMore = () => navigation.navigate('Stay Safe');
 
   return (
     <View style={styles.screen}>
@@ -575,21 +573,6 @@ export default function ScamDetectorScreen({ navigation }) {
           <Text style={styles.title}>Scam Shield 🛡️</Text>
           <Text style={styles.subtitle}>Check suspicious messages and learn to stay safe.</Text>
         </View>
-
-        {/* Education banner — navigates to Stay Safe tab */}
-        <TouchableOpacity
-          style={styles.learnBanner}
-          onPress={handleLearnMore}
-          activeOpacity={0.85}
-          accessibilityLabel="Go to spam education lesson"
-          accessibilityRole="button"
-        >
-          <Text style={styles.learnBannerEmoji}>📖</Text>
-          <View style={styles.learnBannerContent}>
-            <Text style={styles.learnBannerTitle}>Learn what spam looks like</Text>
-            <Text style={styles.learnBannerSubtitle}>See real examples and red flags →</Text>
-          </View>
-        </TouchableOpacity>
 
         {/* Tab Toggle */}
         <TabSegment activeTab={activeTab} onTabChange={setActiveTab} />
@@ -613,31 +596,4 @@ const styles = StyleSheet.create({
   },
   title: { fontFamily: FontFamily.headingExtraBold, fontSize: 26, color: Colors.textPrimary },
   subtitle: { fontFamily: FontFamily.body, fontSize: 16, color: Colors.textSecondary, lineHeight: 24 },
-  // Education banner
-  learnBanner: {
-    marginHorizontal: Spacing.xl,
-    marginTop: Spacing.md,
-    marginBottom: Spacing.xs,
-    borderRadius: 14,
-    backgroundColor: 'rgba(245,200,66,0.10)',
-    borderWidth: 1,
-    borderColor: Colors.primary,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  learnBannerEmoji: { fontSize: 24 },
-  learnBannerContent: { flex: 1, marginLeft: 12 },
-  learnBannerTitle: {
-    fontFamily: FontFamily.bodyBold,
-    fontSize: 16,
-    color: Colors.primary,
-    fontWeight: '700',
-  },
-  learnBannerSubtitle: {
-    fontFamily: FontFamily.body,
-    fontSize: 14,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
 });

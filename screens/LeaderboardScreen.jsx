@@ -118,13 +118,15 @@ const tgStyles = StyleSheet.create({
 
 // ─── LeaderboardScreen ────────────────────────────────────────────────────────
 export default function LeaderboardScreen() {
-  const { leaderboard, user } = useAppContext();
+  const { leaderboard, weeklyLeaderboard, user } = useAppContext();
   const [period, setPeriod] = useState('This Week');
 
+  const source = period === 'This Week' ? (weeklyLeaderboard || []) : (leaderboard || []);
   // Sort by XP descending
-  const sorted = [...leaderboard].sort((a, b) => (b.xp || 0) - (a.xp || 0));
+  const sorted = [...source].sort((a, b) => (b.xp || 0) - (a.xp || 0));
   const top3 = sorted.slice(0, 3);
   const rest = sorted.slice(3);
+  const rankRows = sorted.length >= 3 ? rest : sorted;
   const podiumOrder = top3.length >= 3 ? [top3[1], top3[0], top3[2]] : top3;
 
   return (
@@ -146,18 +148,24 @@ export default function LeaderboardScreen() {
 
           {/* Ranked list */}
           <Text style={styles.sectionHeader}>Rankings</Text>
-          <View style={styles.rankedList}>
-            {rest.map((lbUser, i) => (
-              <React.Fragment key={lbUser.id}>
-                <RankRow
-                  user={lbUser}
-                  rank={i + 4}
-                  isCurrentUser={user && lbUser.id === user.id}
-                />
-                {i < rest.length - 1 && <View style={styles.divider} />}
-              </React.Fragment>
-            ))}
-          </View>
+          {sorted.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateText}>No rankings yet for {period.toLowerCase()}.</Text>
+            </View>
+          ) : (
+            <View style={styles.rankedList}>
+              {rankRows.map((lbUser, i) => (
+                <React.Fragment key={lbUser.id}>
+                  <RankRow
+                    user={lbUser}
+                    rank={sorted.length >= 3 ? i + 4 : i + 1}
+                    isCurrentUser={user && lbUser.id === user.id}
+                  />
+                  {i < rankRows.length - 1 && <View style={styles.divider} />}
+                </React.Fragment>
+              ))}
+            </View>
+          )}
           <View style={{ height: 100 }} />
         </ScrollView>
       </SafeAreaView>
@@ -175,4 +183,6 @@ const styles = StyleSheet.create({
   sectionHeader: { fontFamily: FontFamily.headingBold, fontSize: FontSize.sectionHeader, color: Colors.textPrimary },
   rankedList: { backgroundColor: Colors.surface, borderRadius: Radius.lg, overflow: 'hidden' },
   divider: { height: 1, backgroundColor: Colors.border, marginHorizontal: Spacing.lg },
+  emptyState: { backgroundColor: Colors.surface, borderRadius: Radius.lg, paddingHorizontal: Spacing.lg, paddingVertical: Spacing.xl, alignItems: 'center', justifyContent: 'center' },
+  emptyStateText: { fontFamily: FontFamily.body, fontSize: FontSize.body, color: Colors.textSecondary, textAlign: 'center' },
 });

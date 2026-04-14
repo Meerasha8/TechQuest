@@ -13,6 +13,7 @@ import {
   togglePostLike,
   getUserLikes,
   getLeaderboard,
+  getWeeklyLeaderboard,
   saveScamReport,
   getUserScamHistory,
   logSpamEducationView,
@@ -63,6 +64,7 @@ export function AppContextProvider({ children }) {
   const [showcasePosts, setShowcasePosts] = useState([]);
   const [userLikes, setUserLikes] = useState([]);   // array of post IDs
   const [leaderboard, setLeaderboard] = useState([]);
+  const [weeklyLeaderboard, setWeeklyLeaderboard] = useState([]);
   const [scamHistory, setScamHistory] = useState([]);
   const [justCompletedQuestId, setJustCompletedQuestId] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -113,8 +115,12 @@ export function AppContextProvider({ children }) {
         }
 
         // 5. Load leaderboard
-        const lb = await getLeaderboard();
+        const [lb, weeklyLb] = await Promise.all([
+          getLeaderboard(),
+          getWeeklyLeaderboard(),
+        ]);
         setLeaderboard(lb);
+        setWeeklyLeaderboard(weeklyLb);
       } catch (e) {
         console.warn('AppContext init error:', e);
         setQuests(FALLBACK_QUESTS);
@@ -128,8 +134,12 @@ export function AppContextProvider({ children }) {
   // ── Realtime subscriptions ──────────────────────────────────────────────────
   useEffect(() => {
     const lbChannel = subscribeToLeaderboard(async () => {
-      const lb = await getLeaderboard();
+      const [lb, weeklyLb] = await Promise.all([
+        getLeaderboard(),
+        getWeeklyLeaderboard(),
+      ]);
       setLeaderboard(lb);
+      setWeeklyLeaderboard(weeklyLb);
     });
 
     const showcaseChannel = subscribeToShowcase((newRow) => {
@@ -261,8 +271,12 @@ export function AppContextProvider({ children }) {
   }, [user, userLikes]);
 
   const refreshLeaderboard = useCallback(async () => {
-    const lb = await getLeaderboard();
+    const [lb, weeklyLb] = await Promise.all([
+      getLeaderboard(),
+      getWeeklyLeaderboard(),
+    ]);
     setLeaderboard(lb);
+    setWeeklyLeaderboard(weeklyLb);
   }, []);
 
   const refreshNews = useCallback(async () => {
@@ -299,6 +313,7 @@ export function AppContextProvider({ children }) {
     showcasePosts,
     userLikes,
     leaderboard,
+    weeklyLeaderboard,
     scamHistory,
     justCompletedQuestId,
     loading,

@@ -390,6 +390,57 @@ export async function getLeaderboard() {
   }
 }
 
+export async function getWeeklyLeaderboard() {
+  try {
+    const now = new Date();
+    const day = now.getDay(); // 0 (Sun) - 6 (Sat)
+    const daysSinceMonday = (day + 6) % 7;
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - daysSinceMonday);
+    startOfWeek.setHours(0, 0, 0, 0);
+    const startIso = startOfWeek.toISOString();
+
+    const [{ data: users, error: usersErr }, { data: quests, error: questsErr }, { data: progress, error: progressErr }] = await Promise.all([
+      supabase
+        .from('users')
+        .select('id, name, level'),
+      supabase
+        .from('quests')
+        .select('id, xp'),
+      supabase
+        .from('quest_progress')
+        .select('user_id, quest_id, completed, completed_at')
+        .eq('completed', true)
+        .gte('completed_at', startIso),
+    ]);
+
+    if (usersErr) throw usersErr;
+    if (questsErr) throw questsErr;
+    if (progressErr) throw progressErr;
+
+    const questXpMap = new Map((quests || []).map((q) => [q.id, q.xp || 0]));
+    const weeklyXpByUser = new Map();
+
+    (progress || []).forEach((row) => {
+      const xp = questXpMap.get(row.quest_id) || 0;
+      weeklyXpByUser.set(row.user_id, (weeklyXpByUser.get(row.user_id) || 0) + xp);
+    });
+
+    return (users || [])
+      .map((u) => ({
+        id: u.id,
+        name: u.name,
+        level: u.level,
+        xp: weeklyXpByUser.get(u.id) || 0,
+      }))
+      .sort((a, b) => (b.xp || 0) - (a.xp || 0))
+      .slice(0, 20);
+  } catch (e) {
+    console.error('getWeeklyLeaderboard error:', e);
+    return [];
+  }
+}
+
 // ─── SCAM FUNCTIONS ───────────────────────────────────────────────────────────
 
 export async function saveScamReport(userId, inputText, verdict, explanation, riskLevel) {

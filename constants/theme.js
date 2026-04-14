@@ -2,37 +2,38 @@
 // TechQuest Design System — Warm Retro-Futurism
 
 export const Colors = {
-  // Backgrounds
-  background: '#1A1F35',
-  surface: '#242B45',
+  // Backgrounds (light theme)
+  background: '#FFFFFF',
+  surface: '#F7F9FC',
 
-  // Accents
-  primary: '#F5C842',       // Warm gold
-  primaryGlow: 'rgba(245, 200, 66, 0.25)',
-  secondary: '#FF7B5C',     // Soft coral
-  success: '#4ECBA0',       // Mint green
+  // Accents (balanced yellow, red, blue, green)
+  primary: '#F4C430',       // Warm yellow
+  primaryGlow: 'rgba(244, 196, 48, 0.24)',
+  secondary: '#E74C3C',     // Friendly red
+  success: '#2EAD74',       // Fresh green
+  info: '#2F80ED',          // Clear blue
 
   // Text
-  textPrimary: '#F0EDE8',   // Warm white
-  textSecondary: '#9BA3BF', // Muted blue-gray
+  textPrimary: '#1F2937',   // Deep neutral for readability
+  textSecondary: '#5B6475', // Cool gray
 
   // Borders / dividers
-  border: 'rgba(255, 255, 255, 0.08)',
-  borderGold: '#F5C842',
-  borderSuccess: '#4ECBA0',
+  border: '#DCE3EE',
+  borderGold: '#F4C430',
+  borderSuccess: '#2EAD74',
 
   // Status chips
-  chipActive: 'rgba(255, 123, 92, 0.18)',
-  chipActiveText: '#FF7B5C',
-  chipLocked: 'rgba(155, 163, 191, 0.15)',
-  chipLockedText: '#9BA3BF',
-  chipCompleted: 'rgba(78, 203, 160, 0.18)',
-  chipCompletedText: '#4ECBA0',
+  chipActive: 'rgba(231, 76, 60, 0.14)',
+  chipActiveText: '#E74C3C',
+  chipLocked: 'rgba(91, 100, 117, 0.12)',
+  chipLockedText: '#5B6475',
+  chipCompleted: 'rgba(46, 173, 116, 0.16)',
+  chipCompletedText: '#2EAD74',
 
   // Mission dots
-  dotFilled: '#F5C842',
-  dotFilledSuccess: '#4ECBA0',
-  dotEmpty: 'rgba(155, 163, 191, 0.3)',
+  dotFilled: '#F4C430',
+  dotFilledSuccess: '#2EAD74',
+  dotEmpty: '#C7D0DE',
 };
 
 export const FontFamily = {

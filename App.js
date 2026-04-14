@@ -23,7 +23,6 @@ import GuideScreen         from './screens/GuideScreen';
 import QuestDetailScreen   from './screens/QuestDetailScreen';
 import ScamDetectorScreen    from './screens/ScamDetectorScreen';
 import ProgressScreen        from './screens/ProgressScreen';
-import SpamEducationScreen   from './screens/SpamEducationScreen';
 
 // Context
 import { AppContextProvider, useAppContext } from './context/AppContext';
@@ -42,11 +41,8 @@ const TAB_ICONS = {
   News:         '📰',
   Guide:        '🤖',
   'Scam Check': '🛡️',
-  'Stay Safe':  '📖',
 };
 
-console.log("SUPABASE URL:", process.env.EXPO_PUBLIC_SUPABASE_URL);
-console.log("SUPABASE KEY EXISTS:", !!process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY);
 
 function TabIcon({ name }) {
   return (
@@ -83,11 +79,6 @@ function MainTabs() {
           tabBarActiveTintColor: Colors.secondary,
           tabBarLabel: 'Scam Check',
         }}
-      />
-      <Tab.Screen
-        name="Stay Safe"
-        component={SpamEducationScreen}
-        options={{ tabBarLabel: 'Stay Safe' }}
       />
     </Tab.Navigator>
   );
