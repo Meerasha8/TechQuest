@@ -10,7 +10,23 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+const hasSupabaseConfig =
+  typeof SUPABASE_URL === 'string' &&
+  SUPABASE_URL.length > 0 &&
+  typeof SUPABASE_ANON_KEY === 'string' &&
+  SUPABASE_ANON_KEY.length > 0;
+
+if (!hasSupabaseConfig) {
+  console.error(
+    '[Supabase] Missing EXPO_PUBLIC_SUPABASE_URL or EXPO_PUBLIC_SUPABASE_ANON_KEY. App will stay running, but network-backed features are disabled until env vars are configured in EAS.'
+  );
+}
+
+const fallbackUrl = 'https://example.supabase.co';
+const fallbackAnonKey =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.placeholder.signature';
+
+export const supabase = createClient(hasSupabaseConfig ? SUPABASE_URL : fallbackUrl, hasSupabaseConfig ? SUPABASE_ANON_KEY : fallbackAnonKey, {
   auth: {
     storage: AsyncStorage,
     autoRefreshToken: true,

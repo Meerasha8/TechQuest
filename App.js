@@ -45,6 +45,9 @@ const TAB_ICONS = {
   'Stay Safe':  '📖',
 };
 
+console.log("SUPABASE URL:", process.env.EXPO_PUBLIC_SUPABASE_URL);
+console.log("SUPABASE KEY EXISTS:", !!process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY);
+
 function TabIcon({ name }) {
   return (
     <View style={tabStyles.iconWrapper}>

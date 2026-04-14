@@ -7,6 +7,10 @@ const API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 // ─── Core fetcher ──────────────────────────────────────────────────────────────
 async function callGroq(systemPrompt, messages, model = 'llama-3.1-8b-instant', maxTokens = 300) {
+  if (!GROQ_API_KEY) {
+    throw new Error('Missing EXPO_PUBLIC_GROQ_API_KEY');
+  }
+
   const response = await fetch(API_URL, {
     method: 'POST',
     headers: {
