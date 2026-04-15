@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -10,8 +10,12 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
+  Keyboard,
+  Animated,
+  PanResponder,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppContext } from '../context/AppContext';
 import { Colors, FontFamily, FontSize, Spacing, Radius, TouchTarget } from '../constants/theme';
 
@@ -140,6 +144,8 @@ function ShareModal({ visible, onClose, onPost }) {
   const TOOLS = ['ChatGPT', 'Claude AI', 'Google Lens', 'Google Maps', 'Gemini'];
   const [selectedTool, setSelectedTool] = useState('ChatGPT');
   const [text, setText] = useState('');
+  const insets = useSafeAreaInsets();
+  const translateY = useRef(new Animated.Value(0)).current;
 
   const handlePost = () => {
     if (!text.trim()) return;
@@ -148,48 +154,162 @@ function ShareModal({ visible, onClose, onPost }) {
     onClose();
   };
 
+  const closeModal = () => {
+    Keyboard.dismiss();
+    onClose();
+  };
+
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gestureState) =>
+          Math.abs(gestureState.dy) > Math.abs(gestureState.dx) && gestureState.dy > 6,
+        onPanResponderMove: (_, gestureState) => {
+          translateY.setValue(Math.max(0, gestureState.dy));
+        },
+        onPanResponderRelease: (_, gestureState) => {
+          if (gestureState.dy > 90 || gestureState.vy > 1.1) {
+            closeModal();
+          } else {
+            Animated.spring(translateY, {
+              toValue: 0,
+              useNativeDriver: true,
+              bounciness: 0,
+            }).start();
+          }
+        },
+        onPanResponderTerminate: () => {
+          Animated.spring(translateY, {
+            toValue: 0,
+            useNativeDriver: true,
+            bounciness: 0,
+          }).start();
+        },
+      }),
+    [translateY]
+  );
+
+  const keyboardVerticalOffset = Platform.select({
+    ios: insets.top + 12,
+    android: 0,
+    default: 0,
+  });
+
+  const bottomSafePadding = Math.max(insets.bottom, Spacing.lg);
+
+  useEffect(() => {
+    if (visible) {
+      translateY.setValue(0);
+    }
+  }, [visible, translateY]);
+
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <TouchableOpacity style={smStyles.backdrop} activeOpacity={1} onPress={onClose} />
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={smStyles.kavWrapper}>
-        <View style={smStyles.sheet}>
-          <View style={smStyles.handle} />
-          <Text style={smStyles.title}>Share What You Made</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: Spacing.sm, paddingVertical: Spacing.xs }}>
-            {TOOLS.map((t) => (
-              <FilterPill key={t} label={t} active={selectedTool === t} onPress={() => setSelectedTool(t)} />
-            ))}
-          </ScrollView>
-          <TextInput
-            style={smStyles.input}
-            multiline
-            placeholder="What did you make or learn?"
-            placeholderTextColor={Colors.textSecondary}
-            value={text}
-            onChangeText={setText}
-            textAlignVertical="top"
-          />
-          <TouchableOpacity
-            style={[smStyles.postBtn, !text.trim() && smStyles.postBtnDisabled]}
-            onPress={handlePost}
-            disabled={!text.trim()}
-            activeOpacity={0.85}
-            accessibilityLabel="Post to showcase"
+    <Modal visible={visible} animationType="fade" transparent onRequestClose={closeModal}>
+      <View style={smStyles.overlay}>
+        <Pressable style={smStyles.backdrop} onPress={closeModal} />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={keyboardVerticalOffset}
+          style={smStyles.kavWrapper}
+        >
+          <Animated.View
+            style={[
+              smStyles.sheet,
+              { paddingBottom: bottomSafePadding, transform: [{ translateY }] },
+            ]}
           >
-            <Text style={smStyles.postBtnText}>Post to Showcase  →</Text>
-          </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
+            <View style={smStyles.dragArea} {...panResponder.panHandlers}>
+              <View style={smStyles.handle} />
+            </View>
+
+            <View style={smStyles.headerRow}>
+              <Text style={smStyles.title}>Share What You Made</Text>
+              <TouchableOpacity
+                style={smStyles.closeBtn}
+                onPress={closeModal}
+                activeOpacity={0.8}
+                accessibilityLabel="Close share modal"
+              >
+                <Text style={smStyles.closeBtnText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+              contentContainerStyle={smStyles.scrollContent}
+            >
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={{ flexGrow: 0 }}
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={{ gap: Spacing.sm, paddingVertical: Spacing.xs }}
+              >
+                {TOOLS.map((t) => (
+                  <FilterPill key={t} label={t} active={selectedTool === t} onPress={() => setSelectedTool(t)} />
+                ))}
+              </ScrollView>
+
+              <TextInput
+                style={smStyles.input}
+                multiline
+                placeholder="What did you make or learn?"
+                placeholderTextColor={Colors.textSecondary}
+                value={text}
+                onChangeText={setText}
+                textAlignVertical="top"
+                returnKeyType="done"
+                blurOnSubmit
+              />
+
+              <TouchableOpacity
+                style={[smStyles.postBtn, !text.trim() && smStyles.postBtnDisabled]}
+                onPress={handlePost}
+                disabled={!text.trim()}
+                activeOpacity={0.85}
+                accessibilityLabel="Post to showcase"
+              >
+                <Text style={smStyles.postBtnText}>Post to Showcase  →</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </Animated.View>
+        </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }
 
 const smStyles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
-  kavWrapper: { position: 'absolute', bottom: 0, left: 0, right: 0 },
-  sheet: { backgroundColor: Colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: Spacing.xl, gap: Spacing.lg, paddingBottom: 40 },
-  handle: { width: 48, height: 4, backgroundColor: Colors.border, borderRadius: 2, alignSelf: 'center', marginBottom: Spacing.sm },
+  overlay: { flex: 1, justifyContent: 'flex-end' },
+  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.5)' },
+  kavWrapper: { width: '100%', justifyContent: 'flex-end' },
+  sheet: {
+    backgroundColor: Colors.surface,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.md,
+    maxHeight: '88%',
+    gap: Spacing.md,
+  },
+  dragArea: { alignItems: 'center', paddingVertical: Spacing.xs },
+  handle: { width: 48, height: 4, backgroundColor: Colors.border, borderRadius: 2 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   title: { fontFamily: FontFamily.headingBold, fontSize: FontSize.sectionHeader, color: Colors.textPrimary },
+  closeBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.background,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  closeBtnText: { fontFamily: FontFamily.headingBold, fontSize: 16, color: Colors.textSecondary },
+  scrollContent: { gap: Spacing.lg, paddingBottom: Spacing.sm },
   input: { backgroundColor: Colors.background, borderRadius: Radius.md, borderWidth: 2, borderColor: Colors.border, padding: Spacing.lg, fontFamily: FontFamily.body, fontSize: FontSize.body, color: Colors.textPrimary, minHeight: 120, lineHeight: FontSize.body * 1.5 },
   postBtn: { height: TouchTarget.min, backgroundColor: Colors.primary, borderRadius: Radius.full, alignItems: 'center', justifyContent: 'center' },
   postBtnDisabled: { opacity: 0.4 },
